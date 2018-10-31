@@ -5,6 +5,7 @@ import struct
 import base64
 import json
 import os
+import re
 from Crypto.Cipher import AES
 def dump(file_path):
     core_key = binascii.a2b_hex("687A4852416D736F356B496E62617857")
@@ -52,7 +53,7 @@ def dump(file_path):
     image_size = f.read(4)
     image_size = struct.unpack('<I', bytes(image_size))[0]
     image_data = f.read(image_size)
-    file_name = meta_data['musicName'] + '.' + meta_data['format']
+    file_name = re.sub('[\/:*?"<>|]','-',meta_data['musicName'] + '.' + meta_data['format'])
     m = open(os.path.join(os.path.split(file_path)[0],file_name),'wb')
     chunk = bytearray()
     while True:
@@ -68,11 +69,20 @@ def dump(file_path):
     f.close()
 if __name__ == '__main__':
     import sys
+    count = 1
     if len(sys.argv) > 1:
         for file_path in sys.argv[1:]:
             try:
+                print("正在处理第"+str(count)+"首歌..."+file_path)
                 dump(file_path)
+                print("Success!")
+                count += 1
             except:
+                file1 = open(os.path.join(os.path.split(file_path)[0],"ErrLog.txt"),'a+')
+                print("第"+str(count)+"首歌处理失败，跳过..."+file_path)
+                file1.write("\n"+file_path)
+                file1.close()
                 pass
     else:
         print("Usage: python ncmdump.py \"File Name\"")
+input('按回车键退出...')
